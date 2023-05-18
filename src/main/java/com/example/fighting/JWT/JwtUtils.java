@@ -16,9 +16,9 @@ public class JwtUtils {
 
     private static final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
-    public static String generateToken(String userName, String role) {
+    public static String generateToken(String userName) {
         Claims claims = Jwts.claims().setSubject(userName);
-        claims.put("auth", role);
+//        claims.put("auth", role);
         Date validity = new Date(new Date().getTime() + 432000000L);
         String token = Jwts.builder()
                 .signWith(key)
@@ -52,7 +52,7 @@ public class JwtUtils {
         return new UsernamePasswordAuthenticationToken(userName, token, AuthorityUtils.commaSeparatedStringToAuthorityList(roles));
     }
 
-    private static Claims getTokenBody(String token) {
+    public static Claims getTokenBody(String token) {
         return Jwts.parser()
                 .setSigningKey(key)
                 .parseClaimsJws(token)

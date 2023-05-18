@@ -32,11 +32,6 @@ public class LoginService implements UserDetailsService {
             throw new UsernameNotFoundException(errorMsg);
         }
         UserInfo userInfo = UserInfoOp.get();
-//        String token = JwtUtils.generateToken(username,"role");
-//        Authentication authentication = JwtUtils.getAuthentication(token);
-//        SecurityContextHolder.getContext().setAuthentication(authentication);
-        // 添加 token 前缀 "Bearer "
         return new User(userInfo.getUsername(),new BCryptPasswordEncoder().encode(userInfo.getPassword()),auths);
-//        return userInfo;
     }
 }

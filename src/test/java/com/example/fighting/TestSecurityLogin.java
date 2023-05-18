@@ -1,10 +1,12 @@
 package com.example.fighting;
 
+import com.example.fighting.JWT.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -43,8 +45,7 @@ class TestSecurityLogin {
                         .param("username","jn")//表單內資料設定
                         .param("password","123")
                 )
-                .andExpect(status().is3xxRedirection())//預期回應3xx httpStatusCode
-                .andExpect(redirectedUrl("/"))//收到3xx回應表示要重導頁面, 預期重導至" / "
+                .andExpect(status().isOk())
                 .andReturn();//回傳結果
 
         MockHttpServletResponse response = result.getResponse();
@@ -52,7 +53,7 @@ class TestSecurityLogin {
                 .stream()
                 .collect(Collectors.toMap(h -> h, response::getHeader));
         String reponseBody = response.getContentAsString();
-        // Print headers & body
+        //Print headers & body
         System.err.println("------------------------------------------------------");
         System.err.println("ReponseHeader：");
         System.err.println("-");
@@ -62,6 +63,11 @@ class TestSecurityLogin {
         System.err.println("-");
         System.err.println(reponseBody);
         System.err.println("------------------------------------------------------");
+
+        //token解密
+        String token = headers.get(HttpHeaders.AUTHORIZATION).substring(7);
+        System.err.println("token解密後取得username" + JwtUtils.getTokenBody(token).getSubject());
+
     }
 
 }

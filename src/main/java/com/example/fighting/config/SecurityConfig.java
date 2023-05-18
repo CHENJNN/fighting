@@ -1,7 +1,5 @@
 package com.example.fighting.config;
 
-//import com.jn.filter.JwtFilter;
-
 import com.example.fighting.filter.JwtFilter;
 import com.example.fighting.service.LoginService;
 import org.springframework.context.MessageSource;
@@ -13,16 +11,23 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.util.Assert;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
 @Configuration
 public class SecurityConfig {
-    private LoginService loginService;
-    private MessageSource messageSource;
-    private JwtFilter jwtFilter;
+    private final LoginService loginService;
+    private final MessageSource messageSource;
+    private final JwtFilter jwtFilter;
     public SecurityConfig(LoginService loginService, MessageSource messageSource, JwtFilter jwtFilter) {
         this.loginService = loginService;
         this.messageSource = messageSource;
@@ -32,16 +37,29 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
-                .formLogin()
-                .defaultSuccessUrl("/")
+                /**
+                 * 僅測試用所以關掉
+                 * */
+                .httpBasic().disable()
+                .formLogin().disable()
+                .csrf().disable()
+                .logout().disable()
+                /**
+                 * 關掉session
+                 * */
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .csrf().disable()
+                /**
+                 * 設定那些url不經由security監控
+                 * 其餘請求在登入後都可造訪
+                 * */
                 .authorizeRequests()
                 .antMatchers("/login").permitAll()
                 .anyRequest().authenticated();
 
-        httpSecurity.authenticationProvider(daoAuthenticationProvider());
-        httpSecurity.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        httpSecurity.authenticationProvider(daoAuthenticationProvider());//配置provider
+        httpSecurity.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);//配置JwtFilter
 
         return httpSecurity.build();
     }
@@ -71,5 +89,22 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
+    }
+
+    /**
+     * 若想做SuccessHandler的話
+     * */
+    public SimpleUrlAuthenticationSuccessHandler authenticationSuccessHandler(){
+        return new SimpleUrlAuthenticationSuccessHandler(){
+            @Override
+            public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws ServletException, IOException {
+
+                //todo
+
+                setDefaultTargetUrl("/");
+                super.onAuthenticationSuccess(request, response, authentication);
+            }
+        };
+
     }
 }
